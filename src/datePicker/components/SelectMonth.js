@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Easing,
   Image,
-  TextInput,
   I18nManager,
 } from 'react-native';
 
@@ -34,6 +33,9 @@ const SelectMonth = () => {
   const currentMonth = Number(mainState.activeDate.split('/')[1]);
   const prevDisable = maximumDate && utils.checkYearDisabled(Number(utils.toEnglish(year)), true);
   const nextDisable = minimumDate && utils.checkYearDisabled(Number(utils.toEnglish(year)), false);
+
+  // Changing the view from year selection to month selection
+  const [selectYearView, setSelectYearView] = useState(false)
 
   useEffect(() => {
     mainState.monthOpen && setShow(true);
@@ -112,36 +114,54 @@ const SelectMonth = () => {
         <TouchableOpacity
           activeOpacity={0.7}
           style={style.arrowWrapper}
-          onPress={() => !nextDisable && onSelectYear(-1)}>
+          onPress={() => !nextDisable && onSelectYear(-12)}>
           <Image
             source={require('../../assets/arrow.png')}
             style={[style.arrow, style.leftArrow, nextDisable && style.disableArrow]}
           />
         </TouchableOpacity>
-        <TextInput
-          style={style.yearInput}
-          keyboardType="numeric"
-          maxLength={4}
-          value={year}
-          onBlur={() => onSelectYear(0)}
-          underlineColorAndroid={'rgba(0,0,0,0)'}
-          returnKeyType="done"
-          autoCorrect={false}
-          blurOnSubmit
-          selectionColor={options.mainColor}
-          onChangeText={onChangeYear}
-        />
+        <TouchableOpacity 
+        onPress={()=>setSelectYearView(true)}
+        style={{
+          borderWidth:1,
+          borderColor:'lightgray'
+        }}>
+          <Text style={style.yearInput}>{year}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           activeOpacity={0.7}
           style={style.arrowWrapper}
-          onPress={() => !prevDisable && onSelectYear(+1)}>
+          onPress={() => !prevDisable && onSelectYear(+12)}>
           <Image
             source={require('../../assets/arrow.png')}
             style={[style.arrow, prevDisable && style.disableArrow]}
           />
         </TouchableOpacity>
       </View>
-
+      {/* Added custom view here for year selection */}
+      {selectYearView?
+      <View style={[style.monthList, utils.flexDirection]}>
+        {[...Array(12).keys()].map(item => {
+          return (
+            <TouchableOpacity
+              key={item}
+              activeOpacity={0.8}
+              style={[style.item, year === item + 1 && style.selectedItem]}
+              onPress={() => {
+                onChangeYear((+year+item).toString())
+                setSelectYearView(false)
+                }}>
+              <Text
+                style={[
+                  style.itemText,
+                  year === item + 1 && style.selectedItemText,
+                ]}>
+                {+year+item}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>:
       <View style={[style.monthList, utils.flexDirection]}>
         {[...Array(12).keys()].map(item => {
           const disabled = utils.checkSelectMonthDisabled(mainState.activeDate, item);
@@ -162,11 +182,11 @@ const SelectMonth = () => {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </View>}
     </Animated.View>
   ) : null;
 };
-
+// Updated margin on line 217 so the months are not cut short
 const styles = theme =>
   StyleSheet.create({
     container: {
@@ -194,7 +214,7 @@ const styles = theme =>
     },
     monthList: {
       flexWrap: 'wrap',
-      margin: 25,
+      margin: 10,
     },
     item: {
       width: '30%',
